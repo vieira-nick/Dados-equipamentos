@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Registro de manutenção</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #E8E6DE;
+    --card: #F7F6F1;
+    --ink: #202A2E;
+    --ink-soft: #5B6266;
+    --border: #C9C4B7;
+    --accent: #B4651A;
+    --accent-ink: #FFF8EF;
+    --danger: #A13B2C;
+    --ok: #3E6B4F;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1B2023; --card: #242A2D; --ink: #EDEAE2; --ink-soft: #A3ABAE;
+      --border: #3A4145; --accent: #DE9142; --accent-ink: #221204;
+      --danger: #E08772; --ok: #7FBF98;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1B2023; --card: #242A2D; --ink: #EDEAE2; --ink-soft: #A3ABAE;
+    --border: #3A4145; --accent: #DE9142; --accent-ink: #221204;
+    --danger: #E08772; --ok: #7FBF98;
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, .label-font { font-family: 'Space Grotesk', system-ui, sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 64px; }
+  header { margin-bottom: 28px; }
+  .kicker { color: var(--accent); font-weight: 600; font-size: 0.85rem; letter-spacing: 0.02em; margin: 0 0 6px; }
+  h1 { font-size: clamp(1.6rem, 4vw, 2.1rem); font-weight: 700; margin: 0 0 8px; }
+  .sub { color: var(--ink-soft); margin: 0; max-width: 46ch; }
+
+  .ticket {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px; position: relative;
+  }
+  .ticket::before {
+    content: ""; position: absolute; left: 24px; right: 24px; bottom: -1px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .field { margin-bottom: 16px; }
+  .field:last-of-type { margin-bottom: 0; }
+  label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+  input, textarea, select {
+    width: 100%; font: inherit; color: var(--ink); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px;
+  }
+  input:focus, textarea:focus, select:focus, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px;
+  }
+  textarea { resize: vertical; min-height: 76px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+  .toggle-group { display: flex; gap: 10px; }
+  .toggle-group label {
+    display: flex; align-items: center; gap: 7px; font-weight: 500;
+    border: 1px solid var(--border); border-radius: 6px; padding: 9px 14px;
+    cursor: pointer; margin: 0; flex: 1; justify-content: center;
+  }
+  .toggle-group input[type="radio"] { width: auto; accent-color: var(--accent); }
+  .toggle-group label:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--card)); }
+
+  .actions { display: flex; align-items: center; gap: 12px; margin-top: 22px; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 600; border: none; border-radius: 6px;
+    padding: 11px 18px; cursor: pointer;
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:disabled { opacity: 0.55; cursor: default; }
+  .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+  .status { font-size: 0.88rem; color: var(--ink-soft); min-height: 1.2em; }
+  .status.err { color: var(--danger); }
+  .status.ok { color: var(--ok); }
+
+  .log { margin-top: 44px; }
+  .log-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; gap: 12px; flex-wrap: wrap; }
+  .log-head h2 { font-size: 1.15rem; margin: 0; }
+  .count { color: var(--ink-soft); font-size: 0.88rem; }
+
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th, td { text-align: left; padding: 10px 14px; font-size: 0.92rem; vertical-align: top; }
+  th { color: var(--ink-soft); font-weight: 600; font-size: 0.8rem; border-bottom: 1px solid var(--border); }
+  tbody tr + tr td { border-top: 1px solid var(--border); }
+  td.num { color: var(--ink-soft); font-variant-numeric: tabular-nums; width: 2.5em; }
+  td.defeito { color: var(--danger); }
+
+  .empty { padding: 28px 16px; text-align: center; color: var(--ink-soft); }
+  .db-warn {
+    margin-top: 14px; padding: 10px 12px; border-radius: 6px;
+    background: color-mix(in srgb, var(--danger) 12%, var(--card)); color: var(--danger); font-size: 0.88rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="kicker">Manutenção &amp; patrimônio</p>
+    <h1>Registro de equipamento com defeito</h1>
+    <p class="sub">Preencha os dados abaixo a cada equipamento com problema. Os registros ficam salvos aqui e podem ser exportados para uma planilha a qualquer momento.</p>
+  </header>
+
+  <form class="ticket" id="form">
+    <div class="field">
+      <label for="equipamento">Equipamento</label>
+      <input id="equipamento" name="equipamento" type="text" placeholder="Ex.: Notebook Dell, Impressora HP" required>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="local">Local</label>
+        <select id="local" name="local" required>
+          <option value="" disabled selected>Selecione</option>
+          <option>Biblioteca</option>
+          <option>Carrinho</option>
+          <option>Setor das áreas</option>
+          <option>Setor itinerantes</option>
+          <option>Setor diretiva</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="patrimonio">Patrimônio</label>
+        <input id="patrimonio" name="patrimonio" type="text" placeholder="Número do patrimônio" required>
+      </div>
+    </div>
+    <div class="field" id="carrinhoField" hidden>
+      <label for="carrinhoNum">Número do carrinho</label>
+      <select id="carrinhoNum">
+        <option value="" disabled selected>Selecione de 1 a 21</option>
+      </select>
+    </div>
+    <div class="field" id="nomeField" hidden>
+      <label for="nome">Nome</label>
+      <input id="nome" name="nome" type="text" placeholder="Nome do responsável">
+    </div>
+    <div class="field">
+      <label>Apresenta defeito?</label>
+      <div class="toggle-group">
+        <label><input type="radio" name="temDefeito" value="nao" checked> Não</label>
+        <label><input type="radio" name="temDefeito" value="sim"> Sim</label>
+      </div>
+    </div>
+    <div class="field" id="defeitoField" hidden>
+      <label for="defeito">Descreva o defeito apresentado</label>
+      <textarea id="defeito" name="defeito" placeholder="Descreva o problema observado"></textarea>
+    </div>
+    <div class="actions">
+      <button type="submit" class="btn-primary" id="submitBtn">Salvar registro</button>
+      <span class="status" id="formStatus"></span>
+    </div>
+    <div id="dbWarn" class="db-warn" hidden>Configuração do Firebase ausente ou inválida — os registros não serão salvos. Veja as instruções no topo do arquivo (comentário FIREBASE_CONFIG).</div>
+  </form>
+
+  <section class="log">
+    <div class="log-head">
+      <h2>Registros salvos</h2>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="count" id="count">0 registros</span>
+        <button type="button" class="btn-ghost" id="exportBtn">Exportar para planilha</button>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table id="table" hidden>
+        <thead>
+          <tr><th>#</th><th>Equipamento</th><th>Local</th><th>Nome</th><th>Patrimônio</th><th>Defeito</th><th>Data</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="emptyState">Nenhum registro ainda. Preencha o formulário acima para começar.</div>
+    </div>
+  </section>
+</div>
+
+<!--
+  Firebase SDK (compat) — gratuito no plano Spark do Firebase.
+  Se preferir outra versão, troque o número "10.13.0" nas duas linhas abaixo
+  pela versão mais recente listada em https://firebase.google.com/docs/web/setup
+-->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<script>
+/*
+  ============================================================
+  CONFIGURAÇÃO DO FIREBASE — PREENCHA ANTES DE USAR
+  ============================================================
+  1. Acesse https://console.firebase.google.com e crie um projeto (gratuito).
+  2. No menu lateral, vá em "Compilação" > "Firestore Database" > "Criar banco de dados".
+     Escolha "Iniciar no modo de produção" (vamos ajustar as regras abaixo).
+  3. Vá em "Configurações do projeto" (ícone de engrenagem) > role até
+     "Seus apps" > clique no ícone "</>" para adicionar um app da Web.
+  4. Copie o objeto "firebaseConfig" que aparecer e cole substituindo o
+     objeto de exemplo logo abaixo.
+  5. Em "Firestore Database" > aba "Regras", cole (e publique) algo como:
+
+     rules_version = '2';
+     service cloud.firestore {
+       match /databases/{database}/documents {
+         match /registros/{doc} {
+           allow read, write: if true; // ajuste depois se quiser exigir login
+         }
+       }
+     }
+
+     Isso libera leitura/escrita pública na coleção "registros" — adequado
+     para uso interno. Se quiser restringir, o jeito mais simples é usar o
+     Firebase Authentication (login anônimo) e trocar a regra para
+     "if request.auth != null".
+  ============================================================
+*/
+const firebaseConfig = {
+  apiKey: "AIzaSyC6xLFN3N-VRgaHpGDibM_LPDykrXDUcxw",
+  authDomain: "recolhimento-de-dados.firebaseapp.com",
+  projectId: "recolhimento-de-dados",
+  storageBucket: "recolhimento-de-dados.firebasestorage.app",
+  messagingSenderId: "1018959623666",
+  appId: "1:1018959623666:web:38698b7bd221519529276b",
+  measurementId: "G-DHJQBLLF2F"
+};
+
+let db = null;
+let entries = [];
+
+function fmtDate(ts) {
+  try { return new Date(ts).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+  catch (e) { return ''; }
+}
+
+function escCsv(v) {
+  const s = String(v ?? '');
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const table = document.getElementById('table');
+  const empty = document.getElementById('emptyState');
+  document.getElementById('count').textContent = entries.length + (entries.length === 1 ? ' registro' : ' registros');
+  if (!entries.length) {
+    table.hidden = true; empty.hidden = false; tbody.innerHTML = ''; return;
+  }
+  table.hidden = false; empty.hidden = true;
+  tbody.innerHTML = entries.map((e, i) => `
+    <tr>
+      <td class="num">${entries.length - i}</td>
+      <td>${escapeHtml(e.equipamento)}</td>
+      <td>${escapeHtml(e.local)}</td>
+      <td>${escapeHtml(e.nome || '—')}</td>
+      <td>${escapeHtml(e.patrimonio)}</td>
+      <td class="${e.defeito === 'Não' ? '' : 'defeito'}">${escapeHtml(e.defeito)}</td>
+      <td>${fmtDate(e.criadoEm)}</td>
+    </tr>`).join('');
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function setStatus(msg, kind) {
+  const el = document.getElementById('formStatus');
+  el.textContent = msg || '';
+  el.className = 'status' + (kind ? ' ' + kind : '');
+}
+
+const carrinhoSelect = document.getElementById('carrinhoNum');
+for (let n = 1; n <= 21; n++) {
+  const opt = document.createElement('option');
+  opt.value = String(n); opt.textContent = String(n);
+  carrinhoSelect.appendChild(opt);
+}
+
+const localSelect = document.getElementById('local');
+const carrinhoField = document.getElementById('carrinhoField');
+const nomeField = document.getElementById('nomeField');
+const nomeInput = document.getElementById('nome');
+const gruposComNome = ['Setor itinerantes', 'Setor das áreas', 'Setor diretiva'];
+localSelect.addEventListener('change', () => {
+  const isCarrinho = localSelect.value === 'Carrinho';
+  carrinhoField.hidden = !isCarrinho;
+  carrinhoSelect.required = isCarrinho;
+  if (!isCarrinho) carrinhoSelect.value = '';
+
+  const precisaNome = gruposComNome.includes(localSelect.value);
+  nomeField.hidden = !precisaNome;
+  nomeInput.required = precisaNome;
+  if (!precisaNome) nomeInput.value = '';
+});
+
+const defeitoField = document.getElementById('defeitoField');
+const defeitoInput = document.getElementById('defeito');
+document.querySelectorAll('input[name="temDefeito"]').forEach(r => {
+  r.addEventListener('change', () => {
+    const temDefeito = document.querySelector('input[name="temDefeito"]:checked').value === 'sim';
+    defeitoField.hidden = !temDefeito;
+    defeitoInput.required = temDefeito;
+    if (!temDefeito) defeitoInput.value = '';
+  });
+});
+
+function init() {
+  try {
+    if (!firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith('SUA_')) {
+      throw new Error('Configuração do Firebase não preenchida.');
+    }
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+
+    db.collection('registros').orderBy('criadoEm', 'desc').limit(500).onSnapshot(
+      (snap) => {
+        entries = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+        renderTable();
+      },
+      (err) => {
+        console.error('db snapshot error', err);
+        setStatus('Erro ao carregar registros. Veja o console para detalhes.', 'err');
+      }
+    );
+  } catch (e) {
+    console.error(e);
+    document.getElementById('dbWarn').hidden = false;
+    document.getElementById('submitBtn').disabled = true;
+  }
+}
+
+document.getElementById('form').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if (!db) return;
+  const equipamento = document.getElementById('equipamento').value.trim();
+  const localGrupo = localSelect.value;
+  const patrimonio = document.getElementById('patrimonio').value.trim();
+  const temDefeito = document.querySelector('input[name="temDefeito"]:checked').value === 'sim';
+  const defeitoDesc = defeitoInput.value.trim();
+
+  if (!equipamento || !localGrupo || !patrimonio) {
+    setStatus('Preencha todos os campos.', 'err'); return;
+  }
+  if (localGrupo === 'Carrinho' && !carrinhoSelect.value) {
+    setStatus('Selecione o número do carrinho.', 'err'); return;
+  }
+  const nome = nomeInput.value.trim();
+  if (gruposComNome.includes(localGrupo) && !nome) {
+    setStatus('Informe o nome.', 'err'); return;
+  }
+  if (temDefeito && !defeitoDesc) {
+    setStatus('Descreva o defeito apresentado.', 'err'); return;
+  }
+
+  const local = localGrupo === 'Carrinho' ? `Carrinho ${carrinhoSelect.value}` : localGrupo;
+  const defeito = temDefeito ? defeitoDesc : 'Não';
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  setStatus('Salvando…');
+  try {
+    await db.collection('registros').add({ equipamento, local, nome, patrimonio, defeito, criadoEm: Date.now() });
+    ev.target.reset();
+    carrinhoField.hidden = true;
+    defeitoField.hidden = true;
+    nomeField.hidden = true;
+    setStatus('Registro salvo.', 'ok');
+  } catch (e) {
+    console.error(e);
+    setStatus('Não foi possível salvar. Tente novamente.', 'err');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if (!entries.length) { setStatus('Nenhum registro para exportar.', 'err'); return; }
+  const header = ['Equipamento', 'Local', 'Nome', 'Patrimônio', 'Defeito', 'Data'];
+  const rows = entries.slice().reverse().map(e => [e.equipamento, e.local, e.nome || '', e.patrimonio, e.defeito, fmtDate(e.criadoEm)]);
+  const csv = '\uFEFF' + [header, ...rows].map(r => r.map(escCsv).join(';')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'registros-equipamentos.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+init();
+</script>
+</body>
+</html>
