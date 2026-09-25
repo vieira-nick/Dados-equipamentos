@@ -198,34 +198,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
 <script>
-/*
-  ============================================================
-  CONFIGURAÇÃO DO FIREBASE — PREENCHA ANTES DE USAR
-  ============================================================
-  1. Acesse https://console.firebase.google.com e crie um projeto (gratuito).
-  2. No menu lateral, vá em "Compilação" > "Firestore Database" > "Criar banco de dados".
-     Escolha "Iniciar no modo de produção" (vamos ajustar as regras abaixo).
-  3. Vá em "Configurações do projeto" (ícone de engrenagem) > role até
-     "Seus apps" > clique no ícone "</>" para adicionar um app da Web.
-  4. Copie o objeto "firebaseConfig" que aparecer e cole substituindo o
-     objeto de exemplo logo abaixo.
-  5. Em "Firestore Database" > aba "Regras", cole (e publique) algo como:
 
-     rules_version = '2';
-     service cloud.firestore {
-       match /databases/{database}/documents {
-         match /registros/{doc} {
-           allow read, write: if true; // ajuste depois se quiser exigir login
-         }
-       }
-     }
-
-     Isso libera leitura/escrita pública na coleção "registros" — adequado
-     para uso interno. Se quiser restringir, o jeito mais simples é usar o
-     Firebase Authentication (login anônimo) e trocar a regra para
-     "if request.auth != null".
-  ============================================================
-*/
 const firebaseConfig = {
   apiKey: "AIzaSyC6xLFN3N-VRgaHpGDibM_LPDykrXDUcxw",
   authDomain: "recolhimento-de-dados.firebaseapp.com",
